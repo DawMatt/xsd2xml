@@ -1,1 +1,1 @@
-xmlschema==1.11.3
+xmlschema==2.1.1
