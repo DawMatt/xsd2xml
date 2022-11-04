@@ -24,12 +24,14 @@ DEFAULT_SCHEMAS = {
 }
 
 # sample data is hardcoded
+
+
 def valsmap(v):
     # numeric types
-    v['decimal']    = '10'
-    v['float']      = '-42.217E11'
-    v['double']     = '+24.3e-3'
-    v['integer']    = '176'
+    v['decimal'] = '10'
+    v['float'] = '-42.217E11'
+    v['double'] = '+24.3e-3'
+    v['integer'] = '176'
     v['positiveInteger'] = '+3'
     v['negativeInteger'] = '-7'
     v['nonPositiveInteger'] = '-34'
@@ -74,6 +76,7 @@ def valsmap(v):
     v['anyURI'] = 'https://mixvel.com/'
     v['notation'] = 'notation'
 
+
 class GenXML:
     def __init__(self, xsd, elem, template, use_default_schemas, enable_choice, print_comments):
         self.xsd = xmlschema.XMLSchema(xsd)
@@ -113,7 +116,7 @@ class GenXML:
 
     # remove the namespace in name
     def remove_ns(self, name):
-        if name[0] == '{':
+        if name != None and name[0] == '{':
             x = name.find('}')
             return name[x + 1:]
         return name
@@ -173,13 +176,15 @@ class GenXML:
         if y == 0:
             self.print_comment('empty')
             return
-    
+
         self.print_comment('START:[' + model + ']')
         if self.enable_choice and model == 'choice':
-            self.print_comment('next item is from a [choice] group with size=' + str(y) + '')
+            self.print_comment(
+                'next item is from a [choice] group with size=' + str(y) + '')
         else:
-            self.print_comment('next ' + str(y) + ' items are in a [' + model + '] group')
-            
+            self.print_comment('next ' + str(y) +
+                               ' items are in a [' + model + '] group')
+
         for ng in nextg:
             if isinstance(ng, XsdElement):
                 self.node2xml(ng)
@@ -187,18 +192,18 @@ class GenXML:
                 self.node2xml(ng)
             else:
                 self.group2xml(ng)
-        
+
             if self.enable_choice and model == 'choice':
                 break
         self.print_comment('END:[' + model + ']')
-    
+
     # print a node
     def node2xml(self, node):
         if int(node.min_occurs or 1) == 0:
             self.print_comment('next 1 item is optional (minOccurs = 0)')
         if int(node.max_occurs or 1) > 1:
             self.print_comment('next 1 item is multiple (maxOccurs > 1)')
-        
+
         if isinstance(node, XsdAnyElement):
             print('<_ANY_/>')
             return
@@ -209,15 +214,16 @@ class GenXML:
                 self.print_comment('simple content')
                 tp = str(node.type.content_type)
                 print(self.start_tag(n) + self.genval(tp) + self.end_tag(n))
-            elif not isinstance(node.type.content_type, XsdGroup):
+            elif not isinstance(node.type.content, XsdGroup):
                 self.print_comment('complex content')
                 attrs = self.gen_attrs(node.attributes)
-                tp = node.type.content_type.name
-                print(self.start_tag(n, attrs) + self.genval(tp) + self.end_tag(n))
+                tp = node.type.content.name
+                print(self.start_tag(n, attrs) +
+                      self.genval(tp) + self.end_tag(n))
             else:
                 self.print_comment('complex content')
                 print(self.start_tag(n))
-                self.group2xml(node.type.content_type)
+                self.group2xml(node.type.content)
                 print(self.end_tag(n))
 
         elif isinstance(node.type, XsdAtomicBuiltin):
@@ -243,7 +249,7 @@ class GenXML:
                 print(self.start_tag(n) + value + self.end_tag(n))
         else:
             print('ERROR: unknown type: ' + node.type)
-    
+
     def print_comment(self, comment):
         if self.print_comments:
             print('<!--' + comment + '-->')
@@ -256,9 +262,10 @@ class GenXML:
         self.print_header()
         self.node2xml(self.xsd.elements[self.elem])
 
+
 def main():
     parser = ArgumentParser()
-    parser.add_argument("-s", "--schema", dest="xsdfile", required=True, 
+    parser.add_argument("-s", "--schema", dest="xsdfile", required=True,
                         help="select the xsd used to generate xml")
     parser.add_argument("-e", "--element", dest="element", required=True,
                         help="select an element to dump xml")
@@ -273,8 +280,10 @@ def main():
                         help="print comments to result xml")
     args = parser.parse_args()
 
-    generator = GenXML(args.xsdfile, args.element, args.template, args.use_default_namespaces, args.enable_choice, args.print_comments)
+    generator = GenXML(args.xsdfile, args.element, args.template,
+                       args.use_default_namespaces, args.enable_choice, args.print_comments)
     generator.run()
+
 
 if __name__ == "__main__":
     main()
